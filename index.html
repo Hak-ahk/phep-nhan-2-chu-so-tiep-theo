@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc nghiệm Nhân 2 số</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Màu nền hồng nhạt gradient */
+            background: linear-gradient(135deg, #fbcfe8 0%, #fce7f3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Ngăn cuộn khi hiệu ứng bay ra ngoài */
+        }
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 2rem; /* Giảm padding để gọn hơn */
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 95%; /* Tăng max-width để sử dụng không gian tốt hơn trên màn hình rộng */
+            width: 550px; /* Giảm width một chút */
+            position: relative;
+            overflow: hidden;
+            margin: 1rem;
+        }
+        .question-box {
+            background-color: #e0f2fe; /* light blue */
+            padding: 1.25rem; /* Giảm padding */
+            border-radius: 1rem;
+            margin-bottom: 1.25rem; /* Giảm margin */
+            font-size: 2rem; /* text-3xl, giảm kích thước font */
+            font-weight: 700;
+            color: #1a202c;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .option-button {
+            background-color: #8b5cf6; /* violet-500 */
+            color: white;
+            padding: 0.9rem 1.25rem; /* Giảm padding */
+            border-radius: 0.75rem;
+            font-size: 1.125rem; /* text-lg, giảm kích thước font */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: block;
+            width: 100%;
+            margin-bottom: 0.8rem; /* Giảm margin */
+            border: none;
+        }
+        .option-button:hover {
+            background-color: #7c3aed;
+            transform: translateY(-2px);
+        }
+        .option-button:active {
+            background-color: #6d28d9;
+            transform: translateY(0);
+        }
+        .option-button.correct {
+            background-color: #10b981;
+        }
+        .option-button.wrong {
+            background-color: #ef4444;
+        }
+        .reset-button {
+            background-color: #f97316;
+            color: white;
+            padding: 0.7rem 1.25rem; /* Giảm padding */
+            border-radius: 0.75rem;
+            font-size: 1rem; /* text-base, giảm kích thước font */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .reset-button:hover {
+            background-color: #ea580c;
+            transform: translateY(-2px);
+        }
+        .reset-button:active {
+            background-color: #c2410c;
+            transform: translateY(0);
+        }
+        .feedback-message {
+            font-size: 1.3rem; /* Giảm kích thước font */
+            font-weight: 700;
+            margin-top: 0.8rem; /* Giảm margin */
+            color: #dc2626;
+        }
+        .score-display-container { /* New container for score and question count */
+            display: flex;
+            flex-direction: column; /* Stack score and question count vertically */
+            align-items: flex-start; /* Align text to the left within its column */
+            font-size: 1.3rem; /* Giảm kích thước font */
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        .score-reset-container {
+            display: flex;
+            justify-content: space-between; /* Đặt điểm và nút reset ở hai bên */
+            align-items: center;
+            margin-bottom: 1.25rem; /* Khoảng cách dưới của container này */
+            width: 100%; /* Ensure it takes full width */
+        }
+
+        /* Confetti/Kim tuyến styles */
+        .confetti {
+            position: absolute;
+            width: 8px; /* Kích thước nhỏ hơn */
+            height: 8px; /* Kích thước nhỏ hơn */
+            background-color: #ffeb3b; /* yellow */
+            border-radius: 50%; /* Giữ hình tròn cho đơn giản, tập trung vào animation */
+            opacity: 0;
+            transform: scale(0);
+            animation: confetti-burst-and-fall 2s forwards; /* Thời gian animation dài hơn */
+            pointer-events: none;
+        }
+
+        @keyframes confetti-burst-and-fall {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            25% { /* Bùng nổ lên trên */
+                opacity: 1;
+                transform: translate(var(--translate-x), var(--translate-y-up)) rotate(var(--rotate-deg)) scale(1);
+            }
+            100% { /* Rơi xuống */
+                opacity: 0;
+                transform: translate(var(--translate-x), var(--translate-y-down)) rotate(var(--rotate-deg-end)) scale(0.5);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.25rem;
+                width: 95%;
+            }
+            .question-box {
+                font-size: 1.5rem;
+                padding: 0.8rem;
+                margin-bottom: 1rem;
+            }
+            .option-button {
+                font-size: 1rem;
+                padding: 0.6rem 0.8rem;
+                margin-bottom: 0.6rem;
+            }
+            .score-display-container, .feedback-message { /* Update selector */
+                font-size: 1.1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .reset-button {
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
+            .score-reset-container {
+                margin-bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 0.8rem;
+                border-radius: 0.8rem;
+            }
+            .question-box {
+                font-size: 1.2rem;
+                padding: 0.6rem;
+                margin-bottom: 0.8rem;
+            }
+            .option-button {
+                font-size: 0.9rem;
+                padding: 0.5rem 0.7rem;
+                margin-bottom: 0.5rem;
+            }
+            .score-display-container, .feedback-message { /* Update selector */
+                font-size: 0.9rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .reset-button {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.8rem;
+            }
+            .score-reset-container {
+                margin-bottom: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-6">Trắc nghiệm Nhân 2 số</h1>
+        <!-- Đặt nút reset và hiển thị điểm trong một container chung -->
+        <div class="score-reset-container">
+            <div class="score-display-container">
+                <div id="score-display">Điểm: 0</div>
+                <div id="question-count">Câu: 0 / 0</div>
+            </div>
+            <button id="reset-button" class="reset-button">Chơi lại</button>
+        </div>
+        <div id="question-box" class="question-box"></div>
+        <div id="options-container" class="grid grid-cols-1 gap-4">
+            <!-- Các nút đáp án sẽ được thêm vào đây bằng JavaScript -->
+        </div>
+        <div id="feedback-message" class="feedback-message hidden"></div>
+    </div>
+
+    <script>
+        // Dữ liệu câu hỏi và đáp án
+        const questionsData = [
+            { question: "25 x 10", answer: "two hundred fifty" },
+            { question: "13 x 12", answer: "one hundred fifty-six" },
+            { question: "18 x 11", answer: "one hundred ninety-eight" },
+            { question: "20 x 15", answer: "three hundred" },
+            { question: "14 x 14", answer: "one hundred ninety-six" },
+            { question: "17 x 16", answer: "two hundred seventy-two" },
+            { question: "19 x 12", answer: "two hundred twenty-eight" },
+            { question: "12 x 21", answer: "two hundred fifty-two" },
+            { question: "15 x 17", answer: "two hundred fifty-five" },
+            { question: "22 x 12", answer: "two hundred sixty-four" },
+            { question: "25 x 12", answer: "three hundred" },
+            { question: "30 x 9", answer: "two hundred seventy" },
+            { question: "28 x 10", answer: "two hundred eighty" },
+            { question: "16 x 18", answer: "two hundred eighty-eight" },
+            { question: "24 x 13", answer: "three hundred twelve" },
+            { question: "21 x 14", answer: "two hundred ninety-four" },
+            { question: "27 x 12", answer: "three hundred twenty-four" },
+            { question: "25 x 11", answer: "two hundred seventy-five" },
+            { question: "19 x 15", answer: "two hundred eighty-five" },
+            { question: "18 x 14", answer: "two hundred fifty-two" },
+            { question: "23 x 13", answer: "two hundred ninety-nine" },
+            { question: "26 x 12", answer: "three hundred twelve" },
+            { question: "20 x 16", answer: "three hundred twenty" },
+            { question: "15 x 18", answer: "two hundred seventy" },
+            { question: "28 x 11", answer: "three hundred eight" },
+            { question: "14 x 19", answer: "two hundred sixty-six" },
+            { question: "29 x 10", answer: "two hundred ninety" },
+            { question: "13 x 20", answer: "two hundred sixty" },
+            { question: "17 x 17", answer: "two hundred eighty-nine" },
+            { question: "22 x 15", answer: "three hundred thirty" },
+            { question: "21 x 16", answer: "three hundred thirty-six" },
+            { question: "25 x 13", answer: "three hundred twenty-five" },
+            { question: "18 x 17", answer: "three hundred six" },
+            { question: "24 x 14", answer: "three hundred thirty-six" },
+            { question: "19 x 18", answer: "three hundred forty-two" },
+            { question: "26 x 11", answer: "two hundred eighty-six" },
+            { question: "23 x 14", answer: "three hundred twenty-two" },
+            { question: "20 x 17", answer: "three hundred forty" },
+            { question: "27 x 11", answer: "two hundred ninety-seven" },
+            { question: "16 x 19", answer: "three hundred four" },
+            { question: "28 x 12", answer: "three hundred thirty-six" },
+            { question: "22 x 16", answer: "three hundred fifty-two" },
+            { question: "14 x 20", answer: "two hundred eighty" },
+            { question: "18 x 18", answer: "three hundred twenty-four" },
+            { question: "29 x 11", answer: "three hundred nineteen" },
+            { question: "25 x 14", answer: "three hundred fifty" },
+            { question: "17 x 18", answer: "three hundred six" },
+            { question: "24 x 15", answer: "three hundred sixty" },
+            { question: "21 x 17", answer: "three hundred fifty-seven" },
+            { question: "23 x 15", answer: "three hundred forty-five" },
+            { question: "26 x 13", answer: "three hundred thirty-eight" },
+            { question: "20 x 18", answer: "three hundred sixty" },
+            { question: "28 x 13", answer: "three hundred sixty-four" },
+            { question: "27 x 14", answer: "three hundred seventy-eight" },
+            { question: "19 x 19", answer: "three hundred sixty-one" },
+            { question: "25 x 15", answer: "three hundred seventy-five" },
+            { question: "22 x 17", answer: "three hundred seventy-four" },
+            { question: "29 x 12", answer: "three hundred forty-eight" },
+            { question: "24 x 16", answer: "three hundred eighty-four" },
+            { question: "18 x 19", answer: "three hundred forty-two" }
+        ];
+
+        let shuffledQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        // Biến để kiểm soát việc tính điểm: true nếu câu hỏi hiện tại có thể được tính điểm
+        let canScoreThisQuestion = true; 
+
+        // Lấy các phần tử DOM
+        const questionBox = document.getElementById('question-box');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionCountDisplay = document.getElementById('question-count');
+        const feedbackMessage = document.getElementById('feedback-message'); 
+        const resetButton = document.getElementById('reset-button');
+
+        // Khởi tạo Web Speech API
+        const synth = window.speechSynthesis;
+        // Global utterance object is removed to avoid conflicts
+        // const utterance = new SpeechSynthesisUtterance();
+        // utterance.lang = 'en-US'; 
+
+        // Hàm xáo trộn mảng (thuật toán Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Hàm tạo các đáp án sai ngẫu nhiên
+        function generateIncorrectOptions(correctAnswer, allAnswers) {
+            const incorrectOptions = new Set();
+            const availableAnswers = allAnswers.filter(ans => ans !== correctAnswer);
+            while (incorrectOptions.size < 3) {
+                if (availableAnswers.length === 0) {
+                    break;
+                }
+                const randomIndex = Math.floor(Math.random() * availableAnswers.length);
+                incorrectOptions.add(availableAnswers[randomIndex]);
+                availableAnswers.splice(randomIndex, 1);
+            }
+            return Array.from(incorrectOptions);
+        }
+
+        // Hàm hiển thị câu hỏi và các lựa chọn
+        function displayQuestion() {
+            feedbackMessage.classList.add('hidden'); // Đảm bảo ẩn thông báo văn bản
+            feedbackMessage.textContent = ''; // Xóa nội dung văn bản
+            scoreDisplay.textContent = `Điểm: ${score}`;
+            questionCountDisplay.textContent = `Câu: ${currentQuestionIndex + 1} / ${shuffledQuestions.length}`;
+
+            // Reset trạng thái có thể tính điểm cho câu hỏi mới
+            canScoreThisQuestion = true; 
+
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                questionBox.textContent = `Bạn đã hoàn thành trò chơi! Điểm cuối cùng: ${score}/${shuffledQuestions.length}`;
+                optionsContainer.innerHTML = '';
+                questionCountDisplay.textContent = `Câu: ${shuffledQuestions.length} / ${shuffledQuestions.length}`;
+                return;
+            }
+
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            questionBox.textContent = currentQuestion.question;
+
+            const allPossibleAnswers = [...new Set(questionsData.map(q => q.answer))];
+            const incorrectOptions = generateIncorrectOptions(currentQuestion.answer, allPossibleAnswers);
+
+            let options = [currentQuestion.answer, ...incorrectOptions];
+            shuffleArray(options);
+
+            optionsContainer.innerHTML = '';
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button');
+                button.addEventListener('click', () => checkAnswer(option, currentQuestion.answer, button));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        // Hàm kiểm tra đáp án
+        function checkAnswer(selectedOption, correctAnswer, buttonElement) {
+            Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+
+            if (selectedOption === correctAnswer) {
+                buttonElement.classList.add('correct');
+                // Chỉ tăng điểm nếu câu hỏi này vẫn còn đủ điều kiện để tính điểm (lần đầu đúng)
+                if (canScoreThisQuestion) { 
+                    score++;
+                }
+                // Sau khi có bất kỳ lựa chọn đúng nào (dù là lần đầu hay lần sau), không tính điểm nữa
+                canScoreThisQuestion = false; 
+
+                scoreDisplay.textContent = `Điểm: ${score}`;
+
+                // Đọc đáp án đúng và lời khen
+                if (synth.speaking) {
+                    synth.cancel();
+                }
+                const answerUtterance = new SpeechSynthesisUtterance(correctAnswer);
+                answerUtterance.lang = 'en-US';
+                synth.speak(answerUtterance);
+
+                const positiveFeedback = ["Good job!", "Well done!", "Great!"];
+                const randomPositivePhrase = positiveFeedback[Math.floor(Math.random() * positiveFeedback.length)];
+                const feedbackUtterance = new SpeechSynthesisUtterance(randomPositivePhrase);
+                feedbackUtterance.lang = 'en-US';
+                // Đọc lời khen sau khi đọc đáp án
+                answerUtterance.onend = () => {
+                    synth.speak(feedbackUtterance);
+                };
+
+
+                triggerConfetti(buttonElement);
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                    Array.from(optionsContainer.children).forEach(btn => btn.disabled = false);
+                }, 1800);
+            } else { // Xử lý khi chọn sai
+                buttonElement.classList.add('wrong');
+                // Hiển thị chữ "Thử lại!"
+                feedbackMessage.textContent = 'Thử lại!'; 
+                feedbackMessage.classList.remove('hidden'); 
+
+                // Nếu chọn sai, câu hỏi này sẽ không được tính điểm nữa (nếu chưa được tính)
+                canScoreThisQuestion = false; 
+
+                // Đọc "Try again"
+                if (synth.speaking) {
+                    synth.cancel();
+                }
+                const tryAgainUtterance = new SpeechSynthesisUtterance('Try again');
+                tryAgainUtterance.lang = 'en-US';
+                synth.speak(tryAgainUtterance);
+
+                setTimeout(() => {
+                    buttonElement.classList.remove('wrong');
+                    Array.from(optionsContainer.children).forEach(btn => btn.disabled = false);
+                }, 800);
+            }
+        }
+
+        // Hàm tạo hiệu ứng kim tuyến
+        function triggerConfetti(sourceElement) {
+            const rect = sourceElement.getBoundingClientRect();
+            const startX = rect.left + rect.width / 2;
+            const startY = rect.top + rect.height / 2;
+
+            const colors = ['#ffeb3b', '#4caf50', '#2196f3', '#f44336', '#9c27b0', '#ff9800', '#fbcfe8', '#a78bfa'];
+
+            // Bùng nổ đợt 1
+            for (let i = 0; i < 25; i++) {
+                createConfettiParticle(startX, startY, colors[Math.floor(Math.random() * colors.length)]);
+            }
+
+            // Bùng nổ đợt 2 (sau một khoảng thời gian ngắn)
+            setTimeout(() => {
+                for (let i = 0; i < 25; i++) {
+                    createConfettiParticle(startX, startY, colors[Math.floor(Math.random() * colors.length)]);
+                }
+            }, 250);
+        }
+
+        function createConfettiParticle(x, y, color) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.backgroundColor = color;
+            confetti.style.left = `${x}px`;
+            confetti.style.top = `${y}px`;
+            document.body.appendChild(confetti);
+
+            const angle = Math.random() * Math.PI * 2;
+            const initialVelocity = Math.random() * 80 + 70;
+            const duration = Math.random() * 1.5 + 1.5;
+
+            const translateX = Math.cos(angle) * (Math.random() * 100 + 50);
+            const translateYUp = - (Math.random() * 120 + 80);
+            const translateYDown = (Math.random() * 200 + 150);
+            const rotateDeg = Math.random() * 720;
+            const rotateDegEnd = rotateDeg + Math.random() * 720;
+
+            confetti.style.setProperty('--translate-x', `${translateX}px`);
+            confetti.style.setProperty('--translate-y-up', `${translateYUp}px`);
+            confetti.style.setProperty('--translate-y-down', `${translateYDown}px`);
+            confetti.style.setProperty('--rotate-deg', `${rotateDeg}deg`);
+            confetti.style.setProperty('--rotate-deg-end', `${rotateDegEnd}deg`);
+
+            confetti.style.animationDuration = `${duration}s`;
+
+            confetti.addEventListener('animationend', () => {
+                confetti.remove();
+            });
+        }
+
+        // Hàm khởi động lại trò chơi
+        function resetGame() {
+            shuffledQuestions = [...questionsData];
+            shuffleArray(shuffledQuestions);
+            currentQuestionIndex = 0;
+            score = 0;
+            displayQuestion();
+        }
+
+        // Gắn sự kiện cho nút reset
+        resetButton.addEventListener('click', resetGame);
+
+        // Khởi tạo trò chơi khi tải trang
+        window.onload = resetGame;
+    </script>
+</body>
+</html>
